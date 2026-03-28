@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Score SA - Credit Monitoring Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#E6F7F7',
+                            100: '#B3E8E8',
+                            200: '#80D9D9',
+                            300: '#4DCACA',
+                            400: '#26BABA',
+                            500: '#00A6A6',
+                            600: '#008B8B',
+                            700: '#007070',
+                            800: '#005555',
+                            900: '#003A3A',
+                        },
+                        success: '#22C55E',
+                        surface: {
+                            50: '#FAFBFC',
+                            100: '#F3F4F6',
+                            200: '#E5E7EB',
+                            300: '#D1D5DB',
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                        dm: ['DM Sans', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --bg-alt: #F3F4F6;
+            --fg: #111827;
+            --fg-muted: #6B7280;
+            --accent: #00A6A6;
+            --accent-light: #E6F7F7;
+            --success: #22C55E;
+            --card: #FFFFFF;
+            --border: #E5E7EB;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0F172A;
+            --bg-alt: #1E293B;
+            --fg: #F1F5F9;
+            --fg-muted: #94A3B8;
+            --accent: #26BABA;
+            --accent-light: #134E4A;
+            --success: #22C55E;
+            --card: #1E293B;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Page transitions */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            opacity: 0;
+            transform: translateX(20px);
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .page.active {
+            position: relative;
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .page.exit {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        /* Credit score ring */
+        .score-ring {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        @media (min-width: 640px) {
+            .score-ring {
+                width: 240px;
+                height: 240px;
+            }
+        }
+
+        .score-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .score-ring-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 12;
+        }
+
+        .score-ring-progress {
+            fill: none;
+            stroke: url(#scoreGradient);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 628;
+            stroke-dashoffset: 628;
+            transition: stroke-dashoffset 1.5s ease-out;
+        }
+
+        /* Card hover effects */
+        .offer-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .offer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        /* Button interactions */
+        .btn-primary {
+            background: linear-gradient(135deg, #00A6A6 0%, #008B8B 100%);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 166, 166, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Stagger animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .animate-in {
+                animation: none;
+                opacity: 1;
+            }
+            .page {
+                transition: opacity 0.2s ease;
+            }
+            .page.active {
+                transform: none;
+            }
+        }
+
+        /* Timeline chart */
+        .chart-bar {
+            transition: height 0.8s ease-out;
+        }
+
+        /* Credit card visual */
+        .credit-card {
+            background: linear-gradient(135deg, #1E293B 0%, #334155 50%, #475569 100%);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .credit-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+
+        /* Input focus styles */
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-alt);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        /* Navigation active state */
+        .nav-item {
+            position: relative;
+            transition: color 0.2s ease;
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        /* Notification badge */
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: #EF4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Card Details Page Specific Styles */
+        .form-input-card {
+            background: #fafbfc;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 15px;
+            transition: all 0.25s ease;
+            width: 100%;
+            outline: none;
+            color: #1a1a2e;
+        }
+
+        .form-input-card:focus {
+            border-color: #10b981;
+            background: #ecfdf5;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+        }
+
+        .form-input-card::placeholder {
+            color: #9ca3af;
+        }
+
+        .card-preview {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .card-chip {
+            width: 45px;
+            height: 35px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .card-chip::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 4px;
+            right: 4px;
+            height: 1px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .login-btn-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-btn-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -8px rgba(16, 185, 129, 0.5);
+        }
+
+        .login-btn-card:hover::before {
+            left: 100%;
+        }
+
+        .cvv-card {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cvv-card .magnetic-stripe {
+            height: 32px;
+            background: #1e293b;
+            margin-top: 16px;
+        }
+
+        .cvv-card .cvv-box {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #1e293b;
+            margin: 12px 8px;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slide-in { animation: slideIn 0.5s ease forwards; }
+
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Background pattern -->
+    <div class="fixed inset-0 pointer-events-none opacity-30" style="background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0); background-size: 40px 40px;"></div>
+
+    <!-- App Container -->
+    <div id="app" class="relative min-h-screen">
+
+        <!-- Dashboard Home -->
+        <div id="page-dashboard" class="page active">
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <!-- Header -->
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4 sm:p-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #00A6A6 0%, #008B8B 100%);">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                            </div>
+                            <span class="font-display text-lg font-bold" style="color: var(--fg);">Clear-Score</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="tooltip relative p-2 rounded-xl transition-colors" style="background: var(--bg-alt);" data-tooltip="Notifications" onclick="showNotifications()">
+                                <svg class="w-5 h-5" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <span class="notification-badge">2</span>
+                            </button>
+                            <button onclick="navigateTo('settings')" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #00A6A6 0%, #008B8B 100%);">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="px-4 sm:px-6 py-6">
+                    <!-- Greeting -->
+                    <div class="mb-6 animate-in">
+                        <p class="text-sm font-medium" style="color: var(--fg-muted);">Welcome back,</p>
+                        <h1 class="font-display text-2xl sm:text-3xl font-bold" style="color: var(--fg);">Valued Client</h1>
+                    </div>
+
+                    <!-- Credit Score Hero -->
+                    <div class="rounded-2xl p-6 sm:p-8 mb-6 animate-in delay-1" style="background: linear-gradient(135deg, var(--card) 0%, var(--bg-alt) 100%); box-shadow: 0 4px 24px var(--shadow);">
+                        <div class="flex flex-col sm:flex-row items-center gap-6">
+                            <!-- Score Ring -->
+                            <div class="score-ring flex-shrink-0">
+                                <svg viewBox="0 0 200 200" class="w-full h-full">
+                                    <defs>
+                                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color: #22C55E"/>
+                                            <stop offset="50%" style="stop-color: #00A6A6"/>
+                                            <stop offset="100%" style="stop-color: #008B8B"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <circle class="score-ring-bg" cx="100" cy="100" r="88"/>
+                                    <circle id="score-progress" class="score-ring-progress" cx="100" cy="100" r="88"/>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                    <p class="text-xs font-medium mb-1" style="color: var(--fg-muted);">Your credit score is</p>
+                                    <p id="score-value" class="font-display text-4xl sm:text-5xl font-bold" style="color: var(--fg);">---</p>
+                                    <p class="text-sm font-medium mt-1" style="color: var(--success);">Looking bright</p>
+                                </div>
+                            </div>
+
+                            <!-- Score Info -->
+                            <div class="flex-1 text-center sm:text-left">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4" style="background: rgba(34, 197, 94, 0.1);">
+                                    <span class="w-2 h-2 rounded-full" style="background: var(--success);"></span>
+                                    <span class="text-sm font-medium" style="color: var(--success);">Good Standing</span>
+                                </div>
+                                <p class="text-sm mb-4" style="color: var(--fg-muted);">Updated monthly using verified credit bureau data.</p>
+                                <button onclick="navigateTo('score-details')" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold text-sm">
+                                    See full report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                        <div class="rounded-xl p-4 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                            <p class="text-xs font-medium mb-1" style="color: var(--fg-muted);">Credit Used</p>
+                            <p class="font-display text-xl font-bold" style="color: var(--fg);">23%</p>
+                        </div>
+                        <div class="rounded-xl p-4 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                            <p class="text-xs font-medium mb-1" style="color: var(--fg-muted);">Accounts</p>
+                            <p class="font-display text-xl font-bold" style="color: var(--fg);">7</p>
+                        </div>
+                        <div class="rounded-xl p-4 animate-in delay-3" style="background: var(--card); border: 1px solid var(--border);">
+                            <p class="text-xs font-medium mb-1" style="color: var(--fg-muted);">Inquiries</p>
+                            <p class="font-display text-xl font-bold" style="color: var(--fg);">2</p>
+                        </div>
+                        <div class="rounded-xl p-4 animate-in delay-3" style="background: var(--card); border: 1px solid var(--border);">
+                            <p class="text-xs font-medium mb-1" style="color: var(--fg-muted);">On-time</p>
+                            <p class="font-display text-xl font-bold" style="color: var(--success);">98%</p>
+                        </div>
+                    </div>
+
+                    <!-- Explore Section -->
+                    <div class="mb-6 animate-in delay-4">
+                        <h2 class="font-display text-lg font-bold mb-4" style="color: var(--fg);">Explore</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button onclick="navigateTo('cards')" class="offer-card rounded-2xl p-5 text-left transition-all" style="background: var(--card); border: 1px solid var(--border);">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: var(--accent-light);">
+                                        <svg class="w-6 h-6" style="color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                        </svg>
+                                    </div>
+                                    <svg class="w-5 h-5" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                                <h3 class="font-display font-bold text-lg mb-1" style="color: var(--fg);">Cards</h3>
+                                <p class="text-sm" style="color: var(--fg-muted);">View credit cards you may qualify for.</p>
+                            </button>
+
+                            <button onclick="navigateTo('loans')" class="offer-card rounded-2xl p-5 text-left transition-all" style="background: var(--card); border: 1px solid var(--border);">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(34, 197, 94, 0.1);">
+                                        <svg class="w-6 h-6" style="color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <svg class="w-5 h-5" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                                <h3 class="font-display font-bold text-lg mb-1" style="color: var(--fg);">Loans</h3>
+                                <p class="text-sm" style="color: var(--fg-muted);">Explore personalised loan offers.</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Preview -->
+                    <div class="animate-in delay-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-display text-lg font-bold" style="color: var(--fg);">Credit Timeline</h2>
+                            <button onclick="navigateTo('timeline')" class="text-sm font-medium" style="color: var(--accent);">View all</button>
+                        </div>
+                        <div class="rounded-2xl p-5" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="flex items-end justify-between h-24 gap-2">
+                                <div class="chart-bar flex-1 rounded-t-lg" style="height: 40%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <div class="chart-bar flex-1 rounded-t-lg" style="height: 50%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <div class="chart-bar flex-1 rounded-t-lg" style="height: 55%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <div class="chart-bar flex-1 rounded-t-lg" style="height: 65%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <div class="chart-bar flex-1 rounded-t-lg" style="height: 70%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <div class="chart-bar flex-1 rounded-t-lg" style="height: 85%; background: linear-gradient(to top, #22C55E, #4ADE80);"></div>
+                            </div>
+                            <div class="flex justify-between mt-3 text-xs" style="color: var(--fg-muted);">
+                                <span>Jul</span>
+                                <span>Aug</span>
+                                <span>Sep</span>
+                                <span>Oct</span>
+                                <span>Nov</span>
+                                <span>Dec</span>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- Bottom Navigation -->
+                <nav class="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-lg" style="background: rgba(255,255,255,0.95); border-top: 1px solid var(--border);">
+                    <div class="flex items-center justify-around py-3">
+                        <button class="nav-item active flex flex-col items-center gap-1 px-4 py-2" onclick="navigateTo('dashboard')">
+                            <svg class="w-6 h-6" style="color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                            <span class="text-xs font-medium" style="color: var(--accent);">Home</span>
+                        </button>
+                        <button class="nav-item flex flex-col items-center gap-1 px-4 py-2" onclick="navigateTo('score-details')">
+                            <svg class="w-6 h-6" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <span class="text-xs" style="color: var(--fg-muted);">Score</span>
+                        </button>
+                        <button class="nav-item flex flex-col items-center gap-1 px-4 py-2" onclick="navigateTo('cards')">
+                            <svg class="w-6 h-6" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                            </svg>
+                            <span class="text-xs" style="color: var(--fg-muted);">Offers</span>
+                        </button>
+                        <button class="nav-item flex flex-col items-center gap-1 px-4 py-2" onclick="navigateTo('settings')">
+                            <svg class="w-6 h-6" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="text-xs" style="color: var(--fg-muted);">Settings</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Cards Offers Page -->
+        <div id="page-cards" class="page">
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4">
+                        <button onclick="navigateTo('dashboard')" class="p-2 -ml-2 rounded-xl" style="background: var(--bg-alt);">
+                            <svg class="w-5 h-5" style="color: var(--fg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <h1 class="font-display font-bold" style="color: var(--fg);">Card Offers</h1>
+                        <button class="p-2 rounded-xl" style="background: var(--bg-alt);" onclick="toggleTheme()">
+                            <svg class="w-5 h-5" style="color: var(--fg-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </header>
+
+                <main class="px-4 py-6">
+                    <div class="mb-6 animate-in">
+                        <h2 class="font-display text-2xl font-bold mb-2" style="color: var(--fg);">Cashback and Rewards</h2>
+                        <p class="text-sm" style="color: var(--fg-muted);">Earn cashback, airtime, or shopping rewards when you use your credit card responsibly.</p>
+                    </div>
+
+                    <!-- Card Offer -->
+                    <div class="offer-card rounded-2xl overflow-hidden mb-4 animate-in delay-1" style="background: var(--card); border: 1px solid var(--border);">
+                        <div class="p-5">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3" style="background: rgba(34, 197, 94, 0.1);">
+                                        <svg class="w-4 h-4" style="color: var(--success);" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm font-medium" style="color: var(--success);">Pre-approved</span>
+                                    </div>
+                                    <h3 class="font-display text-lg font-bold" style="color: var(--fg);">FNB RMB Credit Card</h3>
+                                    <p class="text-sm" style="color: var(--fg-muted);">Private Bank</p>
+                                </div>
+                                <div class="credit-card w-24 h-16 flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold opacity-80">RMB</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 mb-5">
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Monthly fee</span>
+                                    <span class="font-semibold" style="color: var(--fg);">R1 840</span>
+                                </div>
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Pre-approved credit limit</span>
+                                    <span class="font-semibold" style="color: var(--accent);">R632 000.00</span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Initiation fee</span>
+                                    <span class="font-semibold" style="color: var(--fg);">R240</span>
+                                </div>
+                            </div>
+
+                            <button onclick="navigateTo('card-details')" class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">Login to Apply</button>
+                        </div>
+                    </div>
+
+                    <!-- Another Card Offer -->
+                    <div class="offer-card rounded-2xl overflow-hidden mb-4 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                        <div class="p-5">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3" style="background: rgba(34, 197, 94, 0.1);">
+                                        <svg class="w-4 h-4" style="color: var(--success);" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm font-medium" style="color: var(--success);">Pre-approved</span>
+                                    </div>
+                                    <h3 class="font-display text-lg font-bold" style="color: var(--fg);">Capitec Global One</h3>
+                                    <p class="text-sm" style="color: var(--fg-muted);">Credit Card</p>
+                                </div>
+                                <div class="w-24 h-16 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%);">
+                                    <span class="text-white text-xs font-bold">Capitec</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 mb-5">
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Monthly fee</span>
+                                    <span class="font-semibold" style="color: var(--fg);">R50</span>
+                                </div>
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Pre-approved credit limit</span>
+                                    <span class="font-semibold" style="color: var(--accent);">R150 000.00</span>
+                                </div>
+                            </div>
+
+                            <button onclick="navigateTo('card-details')" class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">Login to Apply</button>
+                        </div>
+                    </div>
+
+                    <!-- Disclaimer -->
+                    <p class="text-xs text-center mt-6 animate-in delay-3" style="color: var(--fg-muted);">
+                        *Pre-approval does not guarantee acceptance and remains subject to lender credit checks and affordability assessment.
+                    </p>
+                </main>
+            </div>
+        </div>
+
+        <!-- Loans Offers Page -->
+        <div id="page-loans" class="page">
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4">
+                        <button onclick="navigateTo('dashboard')" class="p-2 -ml-2 rounded-xl" style="background: var(--bg-alt);">
+                            <svg class="w-5 h-5" style="color: var(--fg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <h1 class="font-display font-bold" style="color: var(--fg);">Loan Offers</h1>
+                        <div class="w-9"></div>
+                    </div>
+                </header>
+
+                <main class="px-4 py-6">
+                    <div class="mb-6 animate-in">
+                        <h2 class="font-display text-2xl font-bold mb-2" style="color: var(--fg);">Your pre-approved loans</h2>
+                        <p class="text-sm" style="color: var(--fg-muted);">Our partners have indicated that you may qualify for the following loan offers.</p>
+                    </div>
+
+                    <!-- Loan Offer -->
+                    <div class="offer-card rounded-2xl overflow-hidden mb-4 animate-in delay-1" style="background: linear-gradient(135deg, var(--card) 0%, rgba(0, 166, 166, 0.05) 100%); border: 1px solid var(--border);">
+                        <div class="p-5">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-4" style="background: rgba(34, 197, 94, 0.1);">
+                                <svg class="w-4 h-4" style="color: var(--success);" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm font-medium" style="color: var(--success);">Pre-approved</span>
+                            </div>
+
+                            <div class="mb-4">
+                                <p class="font-display text-3xl font-bold mb-1" style="color: var(--accent);">R500 000</p>
+                                <p class="text-sm" style="color: var(--fg-muted);">Personal Loan from Standard Bank</p>
+                            </div>
+
+                            <div class="space-y-3 mb-5">
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Term</span>
+                                    <span class="font-semibold" style="color: var(--fg);">28 years</span>
+                                </div>
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Interest rate</span>
+                                    <span class="font-semibold" style="color: var(--fg);">Prime - 2%</span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Monthly repayment</span>
+                                    <span class="font-semibold" style="color: var(--success);">R4,250</span>
+                                </div>
+                            </div>
+
+                            <button onclick="navigateTo('card-details')" class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">Login to Preview</button>
+                        </div>
+                    </div>
+
+                    <!-- Another Loan -->
+                    <div class="offer-card rounded-2xl overflow-hidden mb-4 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                        <div class="p-5">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-4" style="background: rgba(34, 197, 94, 0.1);">
+                                <svg class="w-4 h-4" style="color: var(--success);" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm font-medium" style="color: var(--success);">Pre-approved</span>
+                            </div>
+
+                            <div class="mb-4">
+                                <p class="font-display text-3xl font-bold mb-1" style="color: var(--fg);">R150 000</p>
+                                <p class="text-sm" style="color: var(--fg-muted);">Personal Loan from FNB</p>
+                            </div>
+
+                            <div class="space-y-3 mb-5">
+                                <div class="flex justify-between py-2" style="border-bottom: 1px solid var(--border);">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Term</span>
+                                    <span class="font-semibold" style="color: var(--fg);">5 years</span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-sm" style="color: var(--fg-muted);">Monthly repayment</span>
+                                    <span class="font-semibold" style="color: var(--success);">R3,150</span>
+                                </div>
+                            </div>
+
+                            <button onclick="navigateTo('card-details')" class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">Login to Preview</button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-center mt-6 animate-in delay-3" style="color: var(--fg-muted);">
+                        *Pre-approval does not guarantee acceptance and remains subject to lender credit checks and affordability assessment.
+                    </p>
+                </main>
+            </div>
+        </div>
+
+        <!-- Card Details Page -->
+        <div id="page-card-details" class="page">
+            <div class="min-h-screen" style="background: #f8f9fc; padding: 2rem 1rem;">
+                <div class="max-w-lg mx-auto">
+                    
+                    <!-- Back Button Header -->
+                    <div class="mb-4">
+                        <button onclick="navigateTo('dashboard')" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            <span class="font-medium">Back</span>
+                        </button>
+                    </div>
+
+                    <!-- Header -->
+                    <div class="text-center mb-8 animate-in">
+                        <h1 class="font-space text-3xl md:text-4xl font-bold text-gray-900">Enter card details</h1>
+                    </div>
+
+                    <!-- Card Preview -->
+                    <div class="card-preview mb-8 animate-in delay-1">
+                        <div class="flex justify-between items-start mb-8">
+                            <div class="card-chip"></div>
+                            <svg class="w-12 h-8 opacity-80" viewBox="0 0 48 32" fill="none">
+                                <circle cx="16" cy="16" r="14" fill="#eb001b" opacity="0.9"/>
+                                <circle cx="32" cy="16" r="14" fill="#f79e1b" opacity="0.9"/>
+                                <path d="M24 5.5c3.5 2.5 5.8 6.5 5.8 11s-2.3 8.5-5.8 11c-3.5-2.5-5.8-6.5-5.8-11s2.3-8.5 5.8-11z" fill="#ff5f00"/>
+                            </svg>
+                        </div>
+                        <div class="mb-6">
+                            <div id="cardNumberDisplay" class="font-space text-xl md:text-2xl tracking-widest font-medium">•••• •••• •••• ••••</div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Card Holder</div>
+                                <div id="cardNameDisplay" class="font-space text-sm uppercase tracking-wide">Your Name</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-gray-400 uppercase mb-1">Expires</div>
+                                <div id="cardExpiryDisplay" class="font-space text-sm">MM/YY</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form id="paymentForm" class="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-6 md:p-8 space-y-6">
+                        
+                        <!-- Card Number -->
+                        <div class="animate-slide-in delay-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                            <input 
+                                type="text" 
+                                id="cardNumber" 
+                                class="form-input-card" 
+                                placeholder="1234 5678 9012 3456"
+                                maxlength="19"
+                                autocomplete="cc-number"
+                                aria-label="Card number"
+                            >
+                        </div>
+
+                        <!-- Expiry Date -->
+                        <div class="animate-slide-in delay-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <input 
+                                        type="text" 
+                                        id="expiryMonth" 
+                                        class="form-input-card text-center" 
+                                        placeholder="Month"
+                                        maxlength="2"
+                                        autocomplete="cc-exp-month"
+                                        aria-label="Expiry month"
+                                    >
+                                </div>
+                                <div>
+                                    <input 
+                                        type="text" 
+                                        id="expiryYear" 
+                                        class="form-input-card text-center" 
+                                        placeholder="Year"
+                                        maxlength="2"
+                                        autocomplete="cc-exp-year"
+                                        aria-label="Expiry year"
+                                    >
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">For example, 10/20</p>
+                        </div>
+
+                        <!-- Cardholder Name -->
+                        <div class="animate-slide-in delay-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cardholder Name</label>
+                            <input 
+                                type="text" 
+                                id="cardName" 
+                                class="form-input-card" 
+                                placeholder="Name as shown on card"
+                                autocomplete="cc-name"
+                                aria-label="Cardholder name"
+                            >
+                        </div>
+
+                        <!-- Security Code -->
+                        <div class="animate-slide-in delay-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Security Code</label>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <input 
+                                        type="text" 
+                                        id="cvv" 
+                                        class="form-input-card text-center" 
+                                        placeholder="CVV"
+                                        maxlength="4"
+                                        autocomplete="cc-csc"
+                                        aria-label="Security code"
+                                    >
+                                </div>
+                                <div class="col-span-2 flex items-center gap-3">
+                                    <!-- CVV Card Illustration -->
+                                    <div class="cvv-card w-20 h-12 flex-shrink-0">
+                                        <div class="magnetic-stripe"></div>
+                                        <div class="cvv-box text-xs">123</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Last 3 digits on the back of your card</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Badge -->
+                        <div class="flex items-center justify-center gap-2 py-3 border-t border-gray-100 animate-slide-in delay-5">
+                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <span class="text-sm text-gray-500">Secured with 256-bit SSL encryption</span>
+                        </div>
+
+                        <!-- Login Button -->
+                        <button type="submit" class="login-btn-card animate-in delay-5">
+                            Login
+                        </button>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="text-center mt-6 text-xs text-gray-400">
+                        <p>Your payment information is encrypted and secure</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credit Score Details Page -->
+        <div id="page-score-details" class="page">
+            <!-- Content unchanged for brevity, but present in actual file -->
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4">
+                        <button onclick="navigateTo('dashboard')" class="p-2 -ml-2 rounded-xl" style="background: var(--bg-alt);">
+                            <svg class="w-5 h-5" style="color: var(--fg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <h1 class="font-display font-bold" style="color: var(--fg);">Credit Health</h1>
+                        <div class="w-9"></div>
+                    </div>
+                </header>
+                 <main class="px-4 py-6">
+                    <div class="mb-6 animate-in">
+                        <h2 class="font-display text-2xl font-bold mb-2" style="color: var(--fg);">Your credit health</h2>
+                        <p class="text-sm" style="color: var(--fg-muted);">A detailed breakdown of your credit profile.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <!-- Payment History -->
+                        <div class="rounded-2xl p-5 animate-in delay-1" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(34, 197, 94, 0.1);">
+                                        <svg class="w-5 h-5" style="color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold" style="color: var(--fg);">Payment History</h3>
+                                        <p class="text-xs" style="color: var(--fg-muted);">On-time payments: 98%</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold" style="color: var(--success);">Excellent</span>
+                            </div>
+                            <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-alt);">
+                                <div class="h-full rounded-full" style="width: 98%; background: linear-gradient(90deg, #22C55E 0%, #4ADE80 100%);"></div>
+                            </div>
+                        </div>
+                        <!-- Credit Utilization -->
+                        <div class="rounded-2xl p-5 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: var(--accent-light);">
+                                        <svg class="w-5 h-5" style="color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold" style="color: var(--fg);">Credit Utilization</h3>
+                                        <p class="text-xs" style="color: var(--fg-muted);">Using 23% of available credit</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold" style="color: var(--success);">Good</span>
+                            </div>
+                            <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-alt);">
+                                <div class="h-full rounded-full" style="width: 23%; background: linear-gradient(90deg, #00A6A6 0%, #26BABA 100%);"></div>
+                            </div>
+                        </div>
+                         <!-- Credit Age -->
+                         <div class="rounded-2xl p-5 animate-in delay-3" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(251, 191, 36, 0.1);">
+                                        <svg class="w-5 h-5" style="color: #F59E0B;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold" style="color: var(--fg);">Credit Age</h3>
+                                        <p class="text-xs" style="color: var(--fg-muted);">Average age: 4 years 3 months</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold" style="color: #F59E0B;">Fair</span>
+                            </div>
+                            <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-alt);">
+                                <div class="h-full rounded-full" style="width: 55%; background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%);"></div>
+                            </div>
+                        </div>
+                        <!-- Total Accounts -->
+                        <div class="rounded-2xl p-5 animate-in delay-4" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(139, 92, 246, 0.1);">
+                                        <svg class="w-5 h-5" style="color: #8B5CF6;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold" style="color: var(--fg);">Total Accounts</h3>
+                                        <p class="text-xs" style="color: var(--fg-muted);">7 accounts (5 open, 2 closed)</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold" style="color: var(--success);">Good</span>
+                            </div>
+                            <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-alt);">
+                                <div class="h-full rounded-full" style="width: 70%; background: linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%);"></div>
+                            </div>
+                        </div>
+                        <!-- Hard Inquiries -->
+                        <div class="rounded-2xl p-5 animate-in delay-5" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(239, 68, 68, 0.1);">
+                                        <svg class="w-5 h-5" style="color: #EF4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold" style="color: var(--fg);">Hard Inquiries</h3>
+                                        <p class="text-xs" style="color: var(--fg-muted);">2 inquiries in last 12 months</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold" style="color: var(--success);">Good</span>
+                            </div>
+                            <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-alt);">
+                                <div class="h-full rounded-full" style="width: 20%; background: linear-gradient(90deg, #EF4444 0%, #F87171 100%);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="navigateTo('timeline')" class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold mt-6">
+                        View Credit Timeline
+                    </button>
+                </main>
+            </div>
+        </div>
+
+        <!-- Credit Timeline Page -->
+        <div id="page-timeline" class="page">
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4">
+                        <button onclick="navigateTo('score-details')" class="p-2 -ml-2 rounded-xl" style="background: var(--bg-alt);">
+                            <svg class="w-5 h-5" style="color: var(--fg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <h1 class="font-display font-bold" style="color: var(--fg);">Credit Timeline</h1>
+                        <div class="w-9"></div>
+                    </div>
+                </header>
+
+                <main class="px-4 py-6">
+                    <div class="mb-6 animate-in">
+                        <h2 class="font-display text-2xl font-bold mb-2" style="color: var(--fg);">Score History</h2>
+                        <p class="text-sm" style="color: var(--fg-muted);">Track how your credit score has changed over time.</p>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="rounded-2xl p-5 mb-6 animate-in delay-1" style="background: var(--card); border: 1px solid var(--border);">
+                        <div class="flex justify-between items-end h-40 mb-4 gap-3">
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full rounded-t-lg" style="height: 60%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <span class="text-xs" style="color: var(--fg-muted);">Jul</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full rounded-t-lg" style="height: 55%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <span class="text-xs" style="color: var(--fg-muted);">Aug</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full rounded-t-lg" style="height: 65%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <span class="text-xs" style="color: var(--fg-muted);">Sep</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full rounded-t-lg" style="height: 70%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <span class="text-xs" style="color: var(--fg-muted);">Oct</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full rounded-t-lg" style="height: 80%; background: linear-gradient(to top, #00A6A6, #26BABA);"></div>
+                                <span class="text-xs" style="color: var(--fg-muted);">Nov</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full rounded-t-lg" style="height: 90%; background: linear-gradient(to top, #22C55E, #4ADE80);"></div>
+                                <span class="text-xs" style="color: var(--fg-muted);">Dec</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-3" style="border-top: 1px solid var(--border);">
+                            <div>
+                                <p class="text-xs" style="color: var(--fg-muted);">Score change</p>
+                                <p class="font-display text-lg font-bold" style="color: var(--success);">+24 points</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs" style="color: var(--fg-muted);">6 month average</p>
+                                <p class="font-display text-lg font-bold" style="color: var(--fg);">714</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Events -->
+                    <h3 class="font-display font-bold mb-4 animate-in delay-2" style="color: var(--fg);">Recent Activity</h3>
+                    
+                    <div class="relative">
+                        <div class="absolute left-4 top-0 bottom-0 w-px" style="background: var(--border);"></div>
+                        
+                        <div class="space-y-4">
+                            <div class="relative pl-10 animate-in delay-2">
+                                <div class="absolute left-2 w-5 h-5 rounded-full flex items-center justify-center" style="background: var(--success);">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div class="rounded-xl p-4" style="background: var(--card); border: 1px solid var(--border);">
+                                    <p class="font-semibold text-sm" style="color: var(--fg);">Credit Score Increased</p>
+                                    <p class="text-xs mt-1" style="color: var(--fg-muted);">Your score increased by 12 points to 729</p>
+                                    <p class="text-xs mt-2" style="color: var(--accent);">December 15, 2024</p>
+                                </div>
+                            </div>
+
+                            <div class="relative pl-10 animate-in delay-3">
+                                <div class="absolute left-2 w-5 h-5 rounded-full flex items-center justify-center" style="background: var(--accent);">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                </div>
+                                <div class="rounded-xl p-4" style="background: var(--card); border: 1px solid var(--border);">
+                                    <p class="font-semibold text-sm" style="color: var(--fg);">New Account Opened</p>
+                                    <p class="text-xs mt-1" style="color: var(--fg-muted);">FNB Credit Card added to your profile</p>
+                                    <p class="text-xs mt-2" style="color: var(--accent);">November 28, 2024</p>
+                                </div>
+                            </div>
+
+                            <div class="relative pl-10 animate-in delay-4">
+                                <div class="absolute left-2 w-5 h-5 rounded-full flex items-center justify-center" style="background: #F59E0B;">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="rounded-xl p-4" style="background: var(--card); border: 1px solid var(--border);">
+                                    <p class="font-semibold text-sm" style="color: var(--fg);">Credit Inquiry</p>
+                                    <p class="text-xs mt-1" style="color: var(--fg-muted);">Standard Bank performed a credit check</p>
+                                    <p class="text-xs mt-2" style="color: var(--accent);">October 5, 2024</p>
+                                </div>
+                            </div>
+
+                            <div class="relative pl-10 animate-in delay-5">
+                                <div class="absolute left-2 w-5 h-5 rounded-full flex items-center justify-center" style="background: var(--success);">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div class="rounded-xl p-4" style="background: var(--card); border: 1px solid var(--border);">
+                                    <p class="font-semibold text-sm" style="color: var(--fg);">Payment Recorded</p>
+                                    <p class="text-xs mt-1" style="color: var(--fg-muted);">On-time payment of R4,500 recorded</p>
+                                    <p class="text-xs mt-2" style="color: var(--accent);">September 30, 2024</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- Identity Protection Page -->
+        <div id="page-identity" class="page">
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4">
+                        <button onclick="navigateTo('dashboard')" class="p-2 -ml-2 rounded-xl" style="background: var(--bg-alt);">
+                            <svg class="w-5 h-5" style="color: var(--fg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <h1 class="font-display font-bold" style="color: var(--fg);">Identity Protection</h1>
+                        <div class="w-9"></div>
+                    </div>
+                </header>
+
+                <main class="px-4 py-6">
+                    <div class="mb-6 animate-in">
+                        <h2 class="font-display text-2xl font-bold mb-2" style="color: var(--fg);">Know your identity is safe</h2>
+                        <p class="text-sm" style="color: var(--fg-muted);">We monitor the web for compromised passwords connected to your email address and alert you of potential fraud risks.</p>
+                    </div>
+
+                    <!-- Status Card -->
+                    <div class="rounded-2xl p-6 mb-6 text-center animate-in delay-1" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0, 166, 166, 0.1) 100%); border: 1px solid rgba(34, 197, 94, 0.2);">
+                        <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style="background: rgba(34, 197, 94, 0.1);">
+                            <svg class="w-8 h-8" style="color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-display text-xl font-bold mb-2" style="color: var(--success);">All Clear</h3>
+                        <p class="text-sm" style="color: var(--fg-muted);">No security threats detected in the last 30 days</p>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="space-y-4">
+                        <div class="rounded-2xl p-5 flex items-start gap-4 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--accent-light);">
+                                <svg class="w-6 h-6" style="color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1" style="color: var(--fg);">Fraud Monitoring</h4>
+                                <p class="text-sm" style="color: var(--fg-muted);">24/7 monitoring of your accounts and credit profile for suspicious activity.</p>
+                            </div>
+                        </div>
+
+                        <div class="rounded-2xl p-5 flex items-start gap-4 animate-in delay-3" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(34, 197, 94, 0.1);">
+                                <svg class="w-6 h-6" style="color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1" style="color: var(--fg);">Password Breach Alerts</h4>
+                                <p class="text-sm" style="color: var(--fg-muted);">Instant notifications if your credentials appear in known data breaches.</p>
+                            </div>
+                        </div>
+
+                        <div class="rounded-2xl p-5 flex items-start gap-4 animate-in delay-4" style="background: var(--card); border: 1px solid var(--border);">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(251, 191, 36, 0.1);">
+                                <svg class="w-6 h-6" style="color: #F59E0B;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-1" style="color: var(--fg);">Identity Theft Protection</h4>
+                                <p class="text-sm" style="color: var(--fg-muted);">Advanced protection against identity theft with recovery assistance.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold mt-6 animate-in delay-5">
+                        Upgrade to Premium Protection
+                    </button>
+                </main>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page">
+            <div class="min-h-screen pb-24" style="background: var(--bg);">
+                <header class="sticky top-0 z-40 backdrop-blur-lg" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center justify-between p-4">
+                        <button onclick="navigateTo('dashboard')" class="p-2 -ml-2 rounded-xl" style="background: var(--bg-alt);">
+                            <svg class="w-5 h-5" style="color: var(--fg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <h1 class="font-display font-bold" style="color: var(--fg);">Settings</h1>
+                        <div class="w-9"></div>
+                    </div>
+                </header>
+
+                <main class="px-4 py-6">
+                    <!-- Profile Section -->
+                    <div class="rounded-2xl p-5 mb-6 animate-in" style="background: var(--card); border: 1px solid var(--border);">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #00A6A6 0%, #008B8B 100%);">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-display font-bold text-lg" style="color: var(--fg);">Client Profile</h3>
+                                <p class="text-sm" style="color: var(--fg-muted);">Update your details</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--fg);">Full Name</label>
+                                <input type="text" placeholder="Enter your name" class="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200" style="background: var(--bg-alt); border: 1.5px solid var(--border); color: var(--fg);">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--fg);">Email</label>
+                                <input type="email" placeholder="Enter your email" class="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200" style="background: var(--bg-alt); border: 1.5px solid var(--border); color: var(--fg);">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--fg);">Phone</label>
+                                <input type="tel" placeholder="Enter your phone number" class="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200" style="background: var(--bg-alt); border: 1.5px solid var(--border); color: var(--fg);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="rounded-2xl p-5 mb-6 animate-in delay-1" style="background: var(--card); border: 1px solid var(--border);">
+                        <h3 class="font-semibold mb-4" style="color: var(--fg);">Notifications</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-sm" style="color: var(--fg);">Score Changes</p>
+                                    <p class="text-xs" style="color: var(--fg-muted);">Get notified when your score changes</p>
+                                </div>
+                                <button class="w-12 h-7 rounded-full relative transition-colors" style="background: var(--accent);" onclick="this.style.background = this.style.background === 'var(--accent)' ? 'var(--border)' : 'var(--accent)'">
+                                    <span class="absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform" style="transform: translateX(20px);"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-sm" style="color: var(--fg);">New Offers</p>
+                                    <p class="text-xs" style="color: var(--fg-muted);">Receive alerts for new offers</p>
+                                </div>
+                                <button class="w-12 h-7 rounded-full relative transition-colors" style="background: var(--accent);" onclick="this.style.background = this.style.background === 'var(--accent)' ? 'var(--border)' : 'var(--accent)'">
+                                    <span class="absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform" style="transform: translateX(20px);"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-sm" style="color: var(--fg);">Security Alerts</p>
+                                    <p class="text-xs" style="color: var(--fg-muted);">Important security notifications</p>
+                                </div>
+                                <button class="w-12 h-7 rounded-full relative transition-colors" style="background: var(--accent);" onclick="this.style.background = this.style.background === 'var(--accent)' ? 'var(--border)' : 'var(--accent)'">
+                                    <span class="absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform" style="transform: translateX(20px);"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="rounded-2xl p-5 mb-6 animate-in delay-2" style="background: var(--card); border: 1px solid var(--border);">
+                        <h3 class="font-semibold mb-4" style="color: var(--fg);">Appearance</h3>
+                        <div class="flex gap-3">
+                            <button onclick="setTheme('light')" class="flex-1 py-3 rounded-xl font-medium text-sm transition-all" style="background: var(--bg-alt); border: 2px solid var(--accent); color: var(--fg);">
+                                Light
+                            </button>
+                            <button onclick="setTheme('dark')" class="flex-1 py-3 rounded-xl font-medium text-sm transition-all" style="background: var(--bg-alt); border: 2px solid var(--border); color: var(--fg);">
+                                Dark
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="space-y-3 animate-in delay-3">
+                        <button onclick="navigateTo('identity')" class="w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2" style="background: var(--bg-alt); color: var(--fg);">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            Identity Protection
+                        </button>
+                        <button class="btn-primary w-full py-3.5 rounded-xl text-white font-semibold">
+                            Save Changes
+                        </button>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="mt-8 text-center animate-in delay-4">
+                        <p class="text-xs mb-3" style="color: var(--fg-muted);">Version 2.1.0</p>
+                        <div class="flex justify-center gap-4 text-xs" style="color: var(--fg-muted);">
+                            <a href="#" style="color: var(--accent);">Privacy Policy</a>
+                            <a href="#" style="color: var(--accent);">Terms of Use</a>
+                            <a href="#" style="color: var(--accent);">Support</a>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- Notification Modal -->
+        <div id="notification-modal" class="fixed inset-0 z-50 flex items-end justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="absolute inset-0 bg-black/50" onclick="hideNotifications()"></div>
+            <div class="relative w-full max-w-lg rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300" style="background: var(--card);">
+                <div class="w-12 h-1 rounded-full mx-auto mb-4" style="background: var(--border);"></div>
+                <h3 class="font-display font-bold text-lg mb-4" style="color: var(--fg);">Notifications</h3>
+                
+                <div class="space-y-3">
+                    <div class="rounded-xl p-4" style="background: var(--bg-alt);">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(34, 197, 94, 0.1);">
+                                <svg class="w-5 h-5" style="color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-sm" style="color: var(--fg);">Credit Score Updated</p>
+                                <p class="text-xs mt-1" style="color: var(--fg-muted);">Your credit score increased by 12 points</p>
+                                <p class="text-xs mt-2" style="color: var(--accent);">2 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rounded-xl p-4" style="background: var(--bg-alt);">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: var(--accent-light);">
+                                <svg class="w-5 h-5" style="color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-sm" style="color: var(--fg);">New Card Offer Available</p>
+                                <p class="text-xs mt-1" style="color: var(--fg-muted);">You have a pre-approved credit card offer</p>
+                                <p class="text-xs mt-2" style="color: var(--accent);">Yesterday</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let currentPage = 'dashboard';
+        let isLoggedIn = true;
+        const scoreTarget = 729;
+        
+        // Page navigation
+        function navigateTo(page) {
+            const currentElement = document.getElementById('page-' + currentPage);
+            const targetElement = document.getElementById('page-' + page);
+            
+            if (!currentElement || !targetElement || currentPage === page) return;
+            
+            // Add exit class to current page
+            currentElement.classList.add('exit');
+            currentElement.classList.remove('active');
+            
+            setTimeout(() => {
+                currentElement.classList.remove('exit');
+                targetElement.classList.add('active');
+                currentPage = page;
+                
+                // Animate score ring if on dashboard
+                if (page === 'dashboard') {
+                    animateScore();
+                }
+                
+                // Initialize card form if on card-details
+                if (page === 'card-details') {
+                    initCardForm();
+                }
+                
+                // Update nav items
+                updateNavigation(page);
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            }, 200);
+        }
+        
+        function updateNavigation(page) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                const icon = item.querySelector('svg');
+                const text = item.querySelector('span');
+                if (icon) icon.style.color = 'var(--fg-muted)';
+                if (text) text.style.color = 'var(--fg-muted)';
+            });
+        }
+        
+        // Score animation
+        function animateScore() {
+            const progress = document.getElementById('score-progress');
+            const scoreValue = document.getElementById('score-value');
+            if (!progress || !scoreValue) return;
+            
+            const circumference = 2 * Math.PI * 88;
+            const maxScore = 850;
+            const minScore = 300;
+            const normalizedScore = (scoreTarget - minScore) / (maxScore - minScore);
+            const offset = circumference - (normalizedScore * circumference);
+            
+            progress.style.strokeDashoffset = Math.max(0, offset);
+            
+            // Animate number
+            let current = 0;
+            const duration = 1500;
+            const increment = scoreTarget / (duration / 16);
+            
+            function updateNumber() {
+                current += increment;
+                if (current < scoreTarget) {
+                    scoreValue.textContent = Math.floor(current);
+                    requestAnimationFrame(updateNumber);
+                } else {
+                    scoreValue.textContent = scoreTarget;
+                }
+            }
+            updateNumber();
+        }
+        
+        // Theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            localStorage.setItem('theme', theme);
+        }
+        
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+        
+        // Notifications
+        function showNotifications() {
+            const modal = document.getElementById('notification-modal');
+            const content = modal.querySelector('.relative');
+            modal.classList.remove('pointer-events-none');
+            modal.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+        }
+        
+        function hideNotifications() {
+            const modal = document.getElementById('notification-modal');
+            const content = modal.querySelector('.relative');
+            modal.style.opacity = '0';
+            content.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.classList.add('pointer-events-none');
+            }, 300);
+        }
+        
+        // Card Details Form Logic
+        function initCardForm() {
+            const cardNumberInput = document.getElementById('cardNumber');
+            const expiryMonthInput = document.getElementById('expiryMonth');
+            const expiryYearInput = document.getElementById('expiryYear');
+            const cardNameInput = document.getElementById('cardName');
+            const cvvInput = document.getElementById('cvv');
+            const form = document.getElementById('paymentForm');
+
+            const cardNumberDisplay = document.getElementById('cardNumberDisplay');
+            const cardNameDisplay = document.getElementById('cardNameDisplay');
+            const cardExpiryDisplay = document.getElementById('cardExpiryDisplay');
+
+            if (!cardNumberInput) return; // Not on the page
+
+            // Format card number with spaces
+            function formatCardNumber(value) {
+                const cleaned = value.replace(/\D/g, '');
+                const groups = cleaned.match(/.{1,4}/g);
+                return groups ? groups.join(' ') : cleaned;
+            }
+
+            // Update card preview
+            function updateCardDisplay() {
+                const number = cardNumberInput.value.replace(/\s/g, '');
+                if (number.length > 0) {
+                    const masked = number.replace(/(\d{4})/g, '$1 ').trim();
+                    cardNumberDisplay.textContent = masked || '•••• •••• •••• ••••';
+                } else {
+                    cardNumberDisplay.textContent = '•••• •••• •••• ••••';
+                }
+            }
+
+            function updateNameDisplay() {
+                cardNameDisplay.textContent = cardNameInput.value.toUpperCase() || 'Your Name';
+            }
+
+            function updateExpiryDisplay() {
+                const month = expiryMonthInput.value;
+                const year = expiryYearInput.value;
+                if (month || year) {
+                    cardExpiryDisplay.textContent = (month || 'MM') + '/' + (year || 'YY');
+                } else {
+                    cardExpiryDisplay.textContent = 'MM/YY';
+                }
+            }
+
+            // Event listeners
+            cardNumberInput.addEventListener('input', (e) => {
+                e.target.value = formatCardNumber(e.target.value);
+                updateCardDisplay();
+            });
+
+            expiryMonthInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                if (parseInt(e.target.value) > 12) e.target.value = '12';
+                updateExpiryDisplay();
+            });
+
+            expiryYearInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                updateExpiryDisplay();
+            });
+
+            cardNameInput.addEventListener('input', updateNameDisplay);
+
+            cvvInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+
+            // Form submission
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('.login-btn-card');
+                btn.textContent = 'Processing...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.textContent = 'Success!';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    setTimeout(() => {
+                        btn.textContent = 'Login';
+                        btn.disabled = false;
+                        navigateTo('dashboard'); // Go back to dashboard after success
+                    }, 2000);
+                }, 1500);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+            
+            // Initial animations
+            animateScore();
+            
+            // Animate chart bars
+            setTimeout(() => {
+                document.querySelectorAll('.chart-bar').forEach(bar => {
+                    const height = bar.style.height;
+                    bar.style.height = '0%';
+                    setTimeout(() => {
+                        bar.style.height = height;
+                    }, 100);
+                });
+            }, 500);
+        });
+        
+        // Reduced motion
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.style.setProperty('--transition-duration', '0.1s');
+        }
+    </script>
+</body>
+</html>

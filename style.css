@@ -1,0 +1,300 @@
+:root {
+    --bg: #FFFFFF;
+    --bg-alt: #F3F4F6;
+    --fg: #111827;
+    --fg-muted: #6B7280;
+    --accent: #00A6A6;
+    --accent-light: #E6F7F7;
+    --success: #22C55E;
+    --card: #FFFFFF;
+    --border: #E5E7EB;
+    --shadow: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+    --bg: #0F172A;
+    --bg-alt: #1E293B;
+    --fg: #F1F5F9;
+    --fg-muted: #94A3B8;
+    --accent: #26BABA;
+    --accent-light: #134E4A;
+    --success: #22C55E;
+    --card: #1E293B;
+    --border: #334155;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+}
+
+.font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+/* Page transitions */
+.page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100vh;
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.page.active {
+    position: relative;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.page.exit {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+/* Credit score ring */
+.score-ring {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+@media (min-width: 640px) {
+    .score-ring { width: 240px; height: 240px; }
+}
+
+.score-ring svg { transform: rotate(-90deg); }
+
+.score-ring-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 12;
+}
+
+.score-ring-progress {
+    fill: none;
+    stroke: url(#scoreGradient);
+    stroke-width: 12;
+    stroke-linecap: round;
+    stroke-dasharray: 628;
+    stroke-dashoffset: 628;
+    transition: stroke-dashoffset 1.5s ease-out;
+}
+
+.offer-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.offer-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px var(--shadow);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00A6A6 0%, #008B8B 100%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 166, 166, 0.3);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in { animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-in { animation: none; opacity: 1; }
+    .page { transition: opacity 0.2s ease; }
+    .page.active { transform: none; }
+}
+
+.chart-bar { transition: height 0.8s ease-out; }
+
+.credit-card {
+    background: linear-gradient(135deg, #1E293B 0%, #334155 50%, #475569 100%);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.credit-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Navigation */
+.nav-item {
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px; left: 50%;
+    transform: translateX(-50%);
+    width: 4px; height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    width: 18px; height: 18px;
+    background: #EF4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Card Details Page Inputs */
+.form-input-card {
+    background: var(--bg-alt);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 15px;
+    transition: all 0.25s ease;
+    width: 100%;
+    outline: none;
+    color: var(--fg);
+}
+
+.form-input-card:focus {
+    border-color: #10b981;
+    background: var(--card);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+
+.form-input-card::placeholder {
+    color: var(--fg-muted);
+}
+
+.card-preview {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+}
+
+.card-preview::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -50%;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+}
+
+.card-chip {
+    width: 45px; height: 35px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 6px;
+    position: relative;
+}
+
+.card-chip::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 4px; right: 4px;
+    height: 1px;
+    background: rgba(0,0,0,0.2);
+}
+
+.login-btn-card {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 16px 32px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-btn-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.login-btn-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -8px rgba(16, 185, 129, 0.5);
+}
+
+.login-btn-card:hover::before {
+    left: 100%;
+}
+
+.cvv-card {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cvv-card .magnetic-stripe {
+    height: 32px;
+    background: #1e293b;
+    margin-top: 16px;
+}
+
+.cvv-card .cvv-box {
+    background: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #1e293b;
+    margin: 12px 8px;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in { animation: slideIn 0.5s ease forwards; }
